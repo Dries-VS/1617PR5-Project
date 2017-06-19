@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    
+     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+     
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-resource/1.6.4/angular-resource.js"></script>
+     
+    
+    <script>
+        
+        var app = angular.module("app",['ngResource']);
+        
+        app.factory("productService",function($resource){
+             return $resource('http://localhost:64991/api/product/:product',{product: "@product"});
+            }
+        );
+        
+        app.factory("jobService",function($resource){
+             return $resource('http://localhost:64991/api/job/:job',{job: "@job"});
+            }
+        );
+        
+        app.factory("tuinService",function($resource){
+             return $resource('http://localhost:64991/api/tuin/:tuin',{tuin: "@tuin"});
+            }
+        );
+        
+        app.controller("ProductController", function($scope,productService){
+           
+            $scope.GetProducten = function(){
+                $scope.productData = productService.query();
+            }
+            
+            $scope.PostProduct = function(){
+                productService.save({
+                    Naam:document.getElementById("txtPNaam").value,
+                    Prijs:document.getElementById("txtPPrijs").value,
+                    Categorie:document.getElementById("txtPCategorie").value,
+                    Omschrijving:document.getElementById("txtPOmschrijving").value,
+                    Active:true
+                });
+                
+                
+            }
+            
+            $scope.DeleteProduct = function(product){
+                console.log("deleting " + product.Id);
+                productService.delete({ id: product.Id });
+            }
+            
+            $scope.GetProductByNaam = function(){
+                productService.query();
+            }
+        });
+        
+        app.controller("TuinController",function($scope,tuinService){
+            
+            $scope.GetTuinen = function(){
+              $scope.tuinData = tuinService.query();
+            }
+            
+            $scope.PostTuin = function(){
+                tuinService.save({
+                    Straat:document.getElementById("txtNaam").value, 
+                    Nummer:document.getElementById("txtNummer").value,
+                    Naam:document.getElementById("txtStraat").value,
+                    Stad:document.getElementById("txtStad").value,
+                    Active:true
+                });
+                
+                $scope.GetTuinen();
+           }
+           
+            $scope.DeleteTuin = function(tuin){
+                console.log("deleting " + tuin.Id);
+                tuinService.delete({ id: tuin.Id });
+            }
+            
+            $scope.GetTuinByAdres = function(){
+                tuinService.query()
+            }
+            
+           $scope.GetTuinById = function(id){
+               $scope.tuinData = tuinService.get({tuin: id});
+           }
+            
+        });
+        
+        app.controller("JobController", function($scope, jobService){
+            $scope.GetJobs = function(){
+                $scope.jobData = jobService.query();
+            }
+            
+            $scope.PostJob = function(){
+                jobService.save({
+                    Tuin: tuinService.get({tuin: document.getElementById("txtJTuinId").value}),
+                    Prijs: document.getElementById("txtJPrijs").value,
+                    Datum: document.getElementById("txtJDatum").value,
+                    Active: true
+                })
+                
+                $scope.GetJobs();
+            }
+            
+            $scope.GetJobsByTuin = function(id){
+                $scope.jobData = jobService.get(id);
+            }
+        });
+        
+        var navP = function(){
+            document.getElementById("Producten").style.display = "inline";
+            document.getElementById("Tuinen").style.display = "none";
+            document.getElementById("Jobs").style.display = "none";
+        }
+        
+        var navT = function(){
+            document.getElementById("Producten").style.display = "none";
+            document.getElementById("Tuinen").style.display = "inline";
+            document.getElementById("Jobs").style.display = "none";
+        }
+        
+        var navJ = function(){
+            document.getElementById("Jobs").style.display = "inline";
+            document.getElementById("Producten").style.display = "none";
+            document.getElementById("Tuinen").style.display = "none";
+        }
+        
+    </script>
+     
+</head>
+<body ng-app="app" onload="navT()">
+   <div id="nav">
+       <button name="btnTuinen" onclick="navT()" value="Tuinen">Tuinen</button>
+       <button name="btnProducten" onclick="navP()" value="Producten">Producten</button>
+       <button name="btnJobs" onclick="navJ()" value="Jobs">Jobs</button>
+   </div>
+    <div id="Producten" ng-controller="ProductController">
+      <button ng-click="GetProducten()" value="Get Producten">Toon Producten</button>
+      <div>
+          <label>Naam: </label><input type="text" id="txtPNaam" />
+          <label>Prijs: </label><input type="text" id="txtPPrijs" /><br>
+          <label>Categorie: </label><input type="text" id="txtPCategorie" /><br>
+          <label style="float: left" >Omschrijving: </label><textarea id="txtPOmschrijving" cols="40" rows="5"></textarea>
+      </div>
+      <button ng-click="PostProduct()">Product Toevoegen</button>
+      <button ng-click="GetProductByNaam()" >Zoek</button>
+      <br>
+      <br>
+      <div ng-repeat="product in productData">
+          <div>
+              <input type="hidden" value="{{product.Id}}"/>
+              {{product.Naam}}<br>
+              {{product.Prijs}}<br>
+              {{product.Categorie}}<br>
+              {{product.Omschrijving}}<br>
+            <button ng-click="DeleteProduct(product)">Verwijder</button><br>
+            <label>---------</label>
+          </div>
+      </div>
+    </div>
+    <div id="Tuinen" ng-controller="TuinController">
+        <button ng-click="GetTuinen()" value="Get Tuinen">Toon Tuinen</button>
+        <div>
+            <label>Naam: </label><input type="text" id="txtNaam" /><br>
+            <label>Straat: </label><input type="text" id="txtStraat" />
+            <label>Nummer: </label><input type="number" id="txtNummer" style="width: 30px" /><br>
+            <label>Stad: </label><input type="text" id="txtStad" />
+        </div>
+        <button ng-click="PostTuin()" >Tuin Toevoegen</button>
+        <button ng-click="GetTuinByAdres()" >Zoek</button>
+        <br>
+        <div ng-repeat="tuin in tuinData">
+            <div>
+               <input type="hidden" value="{{tuin.Id}}"/>  
+                {{tuin.Id}} {{tuin.Naam}}<br>
+                {{tuin.Straat}} {{tuin.Nummer}}<br>
+                {{tuin.Stad}}<br>
+            <button ng-click="DeleteTuin(tuin)">Verwijder </button>
+            <button ng-click="ShowJobsById($index)" >Jobs</button><br>
+            <label>---------</label>
+          </div>
+        </div>
+    </div>
+    <div id="Jobs" ng-controller="JobController">
+      <button ng-click="GetJobs()">Toon Jobs</button>
+      <div>
+          <label>Tuin: </label><input type="text" id="txtJTuinId" />
+          <label>Prijs: </label><input type="text" id="txtJPrijs" /><br>
+          <label>Datum: </label><input type="date" id="txtJDatum" />
+      </div>
+      <button ng-click="PostJob()">Job Toevoegen</button>
+      <button ng-click="GetProductByNaam()" >Zoek</button>
+      <br>
+      <br>
+      <div ng-repeat="job in jobData">
+          <div>
+              <input type="hidden" value="{{job.Id}}"/>
+              {{job.Tuin.Naam}}<br>
+              {{job.Tuin.Adres}}<br>
+              {{job.Datum}}<br>
+              {{job.Prijs}}<br>
+            <button ng-click="DeleteJob(job)">Verwijder</button><br>
+            <label>---------</label>
+          </div>
+      </div>
+    </div>
+</body>
+</html>
